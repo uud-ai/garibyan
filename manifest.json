@@ -1,0 +1,14 @@
+{
+  "name": "Чудо-Словарь",
+  "short_name": "Чудо-Словарь",
+  "description": "Английские слова по методу Гарибяна",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f0f4ff",
+  "theme_color": "#f0f4ff",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "garibyan-icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "garibyan-icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
