@@ -9,6 +9,16 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Чудо-Словарь">
 <meta name="theme-color" content="#f0f4ff">
+<meta name="description" content="Учи 2872 английских слова по методу ярких ассоциаций Самвела Гарибяна: карточки, квиз, уроки по 50 слов и поиск — прямо в браузере, бесплатно.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Чудо-Словарь — Английский без английского">
+<meta property="og:description" content="2872 английских слова с ключами памяти по методу Самвела Гарибяна. Карточки, квиз, уроки по 50 слов, офлайн-режим.">
+<meta property="og:image" content="https://uud-ai.github.io/garibyan/og-preview.jpg">
+<meta property="og:url" content="https://uud-ai.github.io/garibyan/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Чудо-Словарь — Английский без английского">
+<meta name="twitter:description" content="2872 английских слова с ключами памяти по методу Самвела Гарибяна. Карточки, квиз, уроки по 50 слов, офлайн-режим.">
+<meta name="twitter:image" content="https://uud-ai.github.io/garibyan/og-preview.jpg">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="garibyan-icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="garibyan-icon-192.png">
@@ -348,6 +358,35 @@ body {
 .si-assoc { font-size: 12px; color: #78350f; background: #fffbeb; border-radius: 8px; padding: 6px 10px; line-height: 1.4; font-weight: 600; }
 .search-empty { text-align: center; color: var(--text3); font-size: 14px; padding: 40px 0; font-weight: 700; }
 
+/* ── LESSONS ── */
+.lesson-badge {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--accent-l); border: 1.5px solid var(--border2);
+  border-radius: 12px; padding: 8px 8px 8px 14px; margin-bottom: 12px;
+}
+.lb-text { font-size: 13px; font-weight: 800; color: var(--text2); }
+.lb-clear {
+  border: none; background: var(--card); color: var(--text2);
+  font-family: 'Nunito', sans-serif; font-size: 11px; font-weight: 800;
+  border-radius: 8px; padding: 6px 10px; cursor: pointer; white-space: nowrap;
+}
+.lessons-hint { font-size: 13px; color: var(--text3); font-weight: 600; line-height: 1.4; margin-bottom: 16px; }
+.lessons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.lesson-card {
+  text-align: left; cursor: pointer; font-family: 'Nunito', sans-serif;
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 12px 14px; box-shadow: var(--shadow);
+  transition: all .15s;
+}
+.lesson-card:active { transform: scale(.97); }
+.lesson-card.active { border-color: var(--accent); background: var(--accent-l); }
+.lesson-card.empty { opacity: .4; cursor: not-allowed; }
+.lesson-num { font-size: 13px; font-weight: 900; color: var(--text); margin-bottom: 2px; }
+.lesson-range { font-size: 11px; color: var(--text3); font-weight: 700; margin-bottom: 8px; }
+.lesson-bar-wrap { background: var(--border); border-radius: 3px; height: 4px; margin-bottom: 6px; overflow: hidden; }
+.lesson-bar-fill { height: 100%; background: var(--green); border-radius: 3px; }
+.lesson-count { font-size: 11px; color: var(--text3); font-weight: 800; }
+
 /* TOAST */
 .toast {
   position: fixed; bottom: 86px; left: 50%; transform: translateX(-50%) translateY(10px);
@@ -448,6 +487,10 @@ body {
 
 <!-- SCREEN: КАРТОЧКИ -->
 <div class="screen active" id="cardsScreen">
+  <div class="lesson-badge" id="lessonBadge" style="display:none">
+    <span class="lb-text" id="lessonBadgeText">Урок</span>
+    <button class="lb-clear" onclick="clearLesson()">✕ Все слова</button>
+  </div>
   <div class="progress-wrap">
     <div class="progress-fill" id="progressBar" style="width:0%"></div>
   </div>
@@ -558,12 +601,20 @@ body {
   </div>
 </div>
 
+<!-- SCREEN: УРОКИ -->
+<div class="screen" id="lessonsScreen">
+  <div class="section-title" style="margin-top:4px">📖 Уроки по книге</div>
+  <div class="lessons-hint">Слова разбиты на уроки по 50 в том же порядке, что и в книге. Выбери урок, чтобы учить только его.</div>
+  <div class="lessons-grid" id="lessonsGrid"></div>
+</div>
+
 <!-- NAV -->
 <nav class="nav">
-  <button class="nav-item active" id="nav-cards"  onclick="goTo('cardsScreen')"><span class="ni">🃏</span>Карточки</button>
-  <button class="nav-item"        id="nav-quiz"   onclick="goTo('quizScreen');initQuiz()"><span class="ni">🎯</span>Квиз</button>
-  <button class="nav-item"        id="nav-stats"  onclick="goTo('statsScreen');renderStats()"><span class="ni">📊</span>Прогресс</button>
-  <button class="nav-item"        id="nav-search" onclick="goTo('searchScreen')"><span class="ni">🔎</span>Поиск</button>
+  <button class="nav-item active" id="nav-cards"   onclick="goTo('cardsScreen')"><span class="ni">🃏</span>Карточки</button>
+  <button class="nav-item"        id="nav-lessons" onclick="goTo('lessonsScreen');renderLessons()"><span class="ni">📖</span>Уроки</button>
+  <button class="nav-item"        id="nav-quiz"    onclick="goTo('quizScreen');initQuiz()"><span class="ni">🎯</span>Квиз</button>
+  <button class="nav-item"        id="nav-stats"   onclick="goTo('statsScreen');renderStats()"><span class="ni">📊</span>Прогресс</button>
+  <button class="nav-item"        id="nav-search"  onclick="goTo('searchScreen')"><span class="ni">🔎</span>Поиск</button>
 </nav>
 
 <div class="toast" id="toast"></div>
@@ -579,7 +630,7 @@ if (!state) state = freshState();
 function freshState() {
   var deck = WORDS.map(function(_,i){ return i; });
   shuffle(deck);
-  return { known:{}, unknown:{}, seen:{}, deck:deck, pos:0 };
+  return { known:{}, unknown:{}, seen:{}, deck:deck, pos:0, lesson:null };
 }
 function save() { localStorage.setItem('chudo_v1', JSON.stringify(state)); }
 
@@ -587,13 +638,14 @@ function save() { localStorage.setItem('chudo_v1', JSON.stringify(state)); }
 document.getElementById('headerCount').textContent = WORDS.length + ' слов';
 document.getElementById('sTotal').textContent = WORDS.length;
 renderCard();
+updateLessonBadge();
 
 // ── NAV ─────────────────────────────────────────────────────────────────────
 function goTo(id) {
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
-  var map = {cardsScreen:'nav-cards', quizScreen:'nav-quiz', statsScreen:'nav-stats', searchScreen:'nav-search'};
+  var map = {cardsScreen:'nav-cards', lessonsScreen:'nav-lessons', quizScreen:'nav-quiz', statsScreen:'nav-stats', searchScreen:'nav-search'};
   if (map[id]) document.getElementById(map[id]).classList.add('active');
 }
 
@@ -657,6 +709,94 @@ function showDeckEnd() {
   document.getElementById('progressBar').style.width = '100%';
 }
 
+// ── LESSONS ──────────────────────────────────────────────────────────────────
+var LESSON_SIZE = 50;
+
+function buildLessons() {
+  var maxN = 0;
+  for (var i = 0; i < WORDS.length; i++) { if (WORDS[i].n > maxN) maxN = WORDS[i].n; }
+  var lessons = [];
+  for (var start = 1; start <= maxN; start += LESSON_SIZE) {
+    var end = Math.min(start + LESSON_SIZE - 1, maxN);
+    var indices = [];
+    for (var j = 0; j < WORDS.length; j++) {
+      if (WORDS[j].n >= start && WORDS[j].n <= end) indices.push(j);
+    }
+    if (indices.length) lessons.push({ id: lessons.length + 1, start: start, end: end, indices: indices });
+  }
+  return lessons;
+}
+var LESSONS = buildLessons();
+
+function poolIndices() {
+  if (!state.lesson) return WORDS.map(function(_,i){ return i; });
+  var lesson = LESSONS.filter(function(l){ return l.start === state.lesson.start && l.end === state.lesson.end; })[0];
+  return lesson ? lesson.indices : WORDS.map(function(_,i){ return i; });
+}
+
+function renderLessons() {
+  var grid = document.getElementById('lessonsGrid');
+  grid.innerHTML = LESSONS.map(function(l){
+    var know = 0;
+    for (var i = 0; i < l.indices.length; i++) { if (state.known[WORDS[l.indices[i]].w]) know++; }
+    var pct = l.indices.length ? Math.round(know / l.indices.length * 100) : 0;
+    var active = state.lesson && state.lesson.start === l.start && state.lesson.end === l.end;
+    return '<button class="lesson-card' + (active ? ' active' : '') + '" onclick="selectLesson(' + l.start + ',' + l.end + ')">' +
+      '<div class="lesson-num">Урок ' + l.id + '</div>' +
+      '<div class="lesson-range">слова ' + l.start + '–' + l.end + '</div>' +
+      '<div class="lesson-bar-wrap"><div class="lesson-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '<div class="lesson-count">' + know + ' / ' + l.indices.length + ' знаю</div>' +
+      '</button>';
+  }).join('');
+}
+
+function resetCardMainMarkup() {
+  document.getElementById('cardMain').innerHTML =
+    '<div class="card-top"><div class="card-num" id="cardNum">№ 1</div><div class="card-word" id="cardWord">—</div><div class="card-trans" id="cardTrans">—</div></div>' +
+    '<div class="card-assoc-block"><div class="card-assoc-label">🧠 Ключ памяти</div><div class="card-assoc" id="cardAssoc">—</div></div>' +
+    '<div class="card-reveal-btn" id="cardRevealBtn" onclick="revealMeaning()">👁 Показать перевод</div>' +
+    '<div class="card-meaning-block" id="cardMeaningBlock" style="display:none"><div class="card-meaning" id="cardMeaning">—</div></div>';
+  document.getElementById('cardBtns').style.display = 'none';
+}
+
+function selectLesson(start, end) {
+  var lesson = LESSONS.filter(function(l){ return l.start === start && l.end === end; })[0];
+  if (!lesson) return;
+  state.lesson = { start: start, end: end };
+  state.deck = lesson.indices.slice();
+  shuffle(state.deck);
+  state.pos = 0;
+  save();
+  resetCardMainMarkup();
+  updateLessonBadge();
+  goTo('cardsScreen');
+  renderCard();
+  toast('Урок ' + lesson.id + ': слова ' + start + '–' + end);
+}
+
+function clearLesson() {
+  state.lesson = null;
+  state.deck = WORDS.map(function(_,i){ return i; });
+  shuffle(state.deck);
+  state.pos = 0;
+  save();
+  resetCardMainMarkup();
+  updateLessonBadge();
+  renderCard();
+  toast('Учим все слова');
+}
+
+function updateLessonBadge() {
+  var el = document.getElementById('lessonBadge');
+  if (!el) return;
+  if (state.lesson) {
+    el.style.display = 'flex';
+    document.getElementById('lessonBadgeText').textContent = '📖 Урок: слова ' + state.lesson.start + '–' + state.lesson.end;
+  } else {
+    el.style.display = 'none';
+  }
+}
+
 // ── QUIZ ─────────────────────────────────────────────────────────────────────
 var qCorrect = 0, qTotal = 0, qCurrent = null, qAnswered = false;
 
@@ -672,16 +812,18 @@ function nextQuiz() {
   document.getElementById('quizAssoc').classList.remove('show');
   document.getElementById('btnNext').classList.remove('show');
 
-  var idx = Math.floor(Math.random() * WORDS.length);
+  var pool = poolIndices();
+  var idx = pool[Math.floor(Math.random() * pool.length)];
   qCurrent = WORDS[idx];
   document.getElementById('quizWord').textContent  = qCurrent.w;
   document.getElementById('quizTrans').textContent = qCurrent.t ? '[' + qCurrent.t + ']' : '';
 
+  var optionPool = pool.length >= 4 ? pool : WORDS.map(function(_,i){ return i; });
   var others = [];
   var attempts = 0;
   while (others.length < 3 && attempts < 200) {
     attempts++;
-    var r = WORDS[Math.floor(Math.random() * WORDS.length)];
+    var r = WORDS[optionPool[Math.floor(Math.random() * optionPool.length)]];
     if (r.w !== qCurrent.w && !others.find(function(o){ return o.m === r.m; })) {
       others.push(r);
     }
@@ -749,12 +891,8 @@ function renderStats() {
 function resetAll() {
   state = freshState();
   save();
-  document.getElementById('cardMain').innerHTML =
-    '<div class="card-top"><div class="card-num" id="cardNum">№ 1</div><div class="card-word" id="cardWord">—</div><div class="card-trans" id="cardTrans">—</div></div>' +
-    '<div class="card-assoc-block"><div class="card-assoc-label">🧠 Ключ памяти</div><div class="card-assoc" id="cardAssoc">—</div></div>' +
-    '<div class="card-reveal-btn" id="cardRevealBtn" onclick="revealMeaning()">👁 Показать перевод</div>' +
-    '<div class="card-meaning-block" id="cardMeaningBlock" style="display:none"><div class="card-meaning" id="cardMeaning">—</div></div>';
-  document.getElementById('cardBtns').style.display = 'none';
+  resetCardMainMarkup();
+  updateLessonBadge();
   goTo('cardsScreen');
   renderCard();
   toast('Прогресс сброшен. Начинаем сначала!');
@@ -767,16 +905,13 @@ function resetUnknown() {
     return WORDS.findIndex(function(wd){ return wd.w === w; });
   }).filter(function(i){ return i >= 0; });
   if (!indices.length) { toast('Нет слов для повторения!'); return; }
+  state.lesson = null;
   state.deck = indices;
   shuffle(state.deck);
   state.pos = 0;
   save();
-  document.getElementById('cardMain').innerHTML =
-    '<div class="card-top"><div class="card-num" id="cardNum">№ 1</div><div class="card-word" id="cardWord">—</div><div class="card-trans" id="cardTrans">—</div></div>' +
-    '<div class="card-assoc-block"><div class="card-assoc-label">🧠 Ключ памяти</div><div class="card-assoc" id="cardAssoc">—</div></div>' +
-    '<div class="card-reveal-btn" id="cardRevealBtn" onclick="revealMeaning()">👁 Показать перевод</div>' +
-    '<div class="card-meaning-block" id="cardMeaningBlock" style="display:none"><div class="card-meaning" id="cardMeaning">—</div></div>';
-  document.getElementById('cardBtns').style.display = 'none';
+  resetCardMainMarkup();
+  updateLessonBadge();
   goTo('cardsScreen');
   renderCard();
   toast('Повторяем ' + indices.length + ' незнакомых слов!');
