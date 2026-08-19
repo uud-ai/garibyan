@@ -705,7 +705,7 @@ function renderCard() {
 
 function revealMeaning() {
   var w = WORDS[state.deck[state.pos]];
-  state.seen[w.w] = true;
+  state.seen[w.n] = true;
   save();
   document.getElementById('cardRevealBtn').style.display   = 'none';
   document.getElementById('cardMeaningBlock').style.display = 'block';
@@ -716,12 +716,12 @@ function cardAnswer(knew) {
   var w = WORDS[state.deck[state.pos]];
   updateSrs(w, knew);
   if (knew) {
-    state.known[w.w] = true;
-    delete state.unknown[w.w];
+    state.known[w.n] = true;
+    delete state.unknown[w.n];
     confetti();
   } else {
-    state.unknown[w.w] = true;
-    delete state.known[w.w];
+    state.unknown[w.n] = true;
+    delete state.known[w.n];
   }
   state.pos++;
   save();
@@ -771,7 +771,7 @@ function renderLessons() {
   var grid = document.getElementById('lessonsGrid');
   grid.innerHTML = LESSONS.map(function(l){
     var know = 0;
-    for (var i = 0; i < l.indices.length; i++) { if (state.known[WORDS[l.indices[i]].w]) know++; }
+    for (var i = 0; i < l.indices.length; i++) { if (state.known[WORDS[l.indices[i]].n]) know++; }
     var pct = l.indices.length ? Math.round(know / l.indices.length * 100) : 0;
     var active = state.lesson && state.lesson.start === l.start && state.lesson.end === l.end;
     return '<button class="lesson-card' + (active ? ' active' : '') + '" onclick="selectLesson(' + l.start + ',' + l.end + ')">' +
@@ -786,7 +786,16 @@ function renderLessons() {
 function resetCardMainMarkup() {
   document.getElementById('cardMain').innerHTML =
     '<div class="card-top"><div class="card-num" id="cardNum">№ 1</div><div class="card-word" id="cardWord">—</div><div class="card-trans" id="cardTrans">—</div></div>' +
-    '<div class="card-assoc-block"><div class="card-assoc-label">🧠 Ключ памяти</div><div class="card-assoc" id="cardAssoc">—</div></div>' +
+    '<div class="card-assoc-block">' +
+      '<div class="card-assoc-label" style="display:flex;align-items:center;justify-content:space-between">' +
+        '<span>🧠 Ключ памяти</span>' +
+        '<button onclick="speakWord()" style="background:var(--accent-l);border:1px solid var(--border2);border-radius:8px;padding:3px 10px;font-size:12px;font-weight:800;color:var(--accent2);cursor:pointer;font-family:Nunito,sans-serif">🔊 Слушать</button>' +
+      '</div>' +
+      '<div class="card-assoc" id="cardAssoc">—</div>' +
+    '</div>' +
+    '<div class="card-img-thumb" id="cardImgThumb" onclick="openImgModal()">' +
+      '<div class="add-img-btn"><span>🖼</span>Добавить картинку</div>' +
+    '</div>' +
     '<div class="card-reveal-btn" id="cardRevealBtn" onclick="revealMeaning()">👁 Показать перевод</div>' +
     '<div class="card-meaning-block" id="cardMeaningBlock" style="display:none"><div class="card-meaning" id="cardMeaning">—</div></div>';
   document.getElementById('cardBtns').style.display = 'none';
@@ -846,19 +855,19 @@ var SRS_INTERVALS_DAYS = [0, 1, 3, 7, 14, 30, 90];
 
 function updateSrs(w, knew) {
   if (!state.srs) state.srs = {};
-  var cur = state.srs[w.w] || { box: 0, due: 0 };
+  var cur = state.srs[w.n] || { box: 0, due: 0 };
   var box = knew ? Math.min(cur.box + 1, SRS_INTERVALS_DAYS.length - 1) : 0;
-  state.srs[w.w] = { box: box, due: Date.now() + SRS_INTERVALS_DAYS[box] * 86400000 };
+  state.srs[w.n] = { box: box, due: Date.now() + SRS_INTERVALS_DAYS[box] * 86400000 };
 }
 
 function dueIndices() {
   var now = Date.now();
   var due = [];
   for (var i = 0; i < WORDS.length; i++) {
-    var srs = state.srs[WORDS[i].w];
+    var srs = state.srs[WORDS[i].n];
     if (srs && srs.due <= now) due.push(i);
   }
-  due.sort(function(a,b){ return state.srs[WORDS[a].w].due - state.srs[WORDS[b].w].due; });
+  due.sort(function(a,b){ return state.srs[WORDS[a].n].due - state.srs[WORDS[b].n].due; });
   return due;
 }
 
@@ -1019,10 +1028,10 @@ function resetAll() {
 }
 
 function resetUnknown() {
-  var unknownWords = Object.keys(state.unknown);
-  if (!unknownWords.length) { toast('Нет слов для повторения!'); return; }
-  var indices = unknownWords.map(function(w){
-    return WORDS.findIndex(function(wd){ return wd.w === w; });
+  var unknownNs = Object.keys(state.unknown).map(Number);
+  if (!unknownNs.length) { toast('Нет слов для повторения!'); return; }
+  var indices = unknownNs.map(function(n){
+    return WORDS.findIndex(function(wd){ return wd.n === n; });
   }).filter(function(i){ return i >= 0; });
   if (!indices.length) { toast('Нет слов для повторения!'); return; }
   state.lesson = null;
@@ -1129,12 +1138,12 @@ nextQuiz = function() {
 var imgStore = JSON.parse(localStorage.getItem('chudo_imgs') || '{}');
 function saveImgs() { localStorage.setItem('chudo_imgs', JSON.stringify(imgStore)); }
 
-var currentImgWord = null;
+var currentImgN = null;
 
 function openImgModal() {
   var w = WORDS[state.deck[state.pos]];
   if (!w) return;
-  currentImgWord = w.w;
+  currentImgN = w.n;
   document.getElementById('imgModalWord').textContent = w.w + ' — ' + w.m;
   updateImgPreview();
   document.getElementById('imgModalOverlay').classList.add('open');
@@ -1148,7 +1157,7 @@ function closeImgModal(e) {
 
 function updateImgPreview() {
   var wrap = document.getElementById('imgPreviewWrap');
-  var img = imgStore[currentImgWord];
+  var img = imgStore[currentImgN];
   if (img) {
     wrap.innerHTML = '<img src="' + img + '" alt="illustration">';
   } else {
@@ -1165,7 +1174,7 @@ function onImgFile(e) {
   if (!file) return;
   var reader = new FileReader();
   reader.onload = function(ev) {
-    imgStore[currentImgWord] = ev.target.result;
+    imgStore[currentImgN] = ev.target.result;
     saveImgs();
     updateImgPreview();
     updateCardImgThumb();
@@ -1176,8 +1185,8 @@ function onImgFile(e) {
 }
 
 function clearImg() {
-  if (!currentImgWord) return;
-  delete imgStore[currentImgWord];
+  if (currentImgN === null) return;
+  delete imgStore[currentImgN];
   saveImgs();
   updateImgPreview();
   updateCardImgThumb();
@@ -1189,7 +1198,7 @@ function updateCardImgThumb() {
   if (!w) return;
   var thumb = document.getElementById('cardImgThumb');
   if (!thumb) return;
-  var img = imgStore[w.w];
+  var img = imgStore[w.n];
   if (img) {
     thumb.innerHTML = '<img src="' + img + '" alt="illustration">';
   } else {
